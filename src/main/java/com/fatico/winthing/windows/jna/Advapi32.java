@@ -9,7 +9,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 @SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_INTERFACE")
 public interface Advapi32 extends com.sun.jna.platform.win32.Advapi32 {
 
-    Advapi32 INSTANCE = (Advapi32) Native.load(
+    Advapi32 INSTANCE = Native.load(
         "advapi32",
         Advapi32.class,
         W32APIOptions.DEFAULT_OPTIONS

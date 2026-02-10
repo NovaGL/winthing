@@ -11,7 +11,6 @@ public class BaseController {
 
     public BaseController(String prefix) {
         Objects.requireNonNull(prefix);
-        prefix = prefix.replaceFirst("^/+", "");
         if (!prefix.isEmpty() && !prefix.endsWith("/")) {
             prefix += "/";
         }

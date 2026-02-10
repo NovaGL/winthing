@@ -2,13 +2,13 @@ package com.fatico.winthing.messaging;
 
 import com.fatico.winthing.Application;
 import com.fatico.winthing.Settings;
-import com.google.common.base.Charsets;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonSyntaxException;
 import com.google.inject.Inject;
 import com.typesafe.config.Config;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 
 public class Engine implements MqttCallback, MessagePublisher {
 
-    private static final Charset CHARSET = Charsets.UTF_8;
+    private static final Charset CHARSET = StandardCharsets.UTF_8;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -45,9 +45,10 @@ public class Engine implements MqttCallback, MessagePublisher {
     private final Condition runningCondition = runnningLock.newCondition();
 
     @Inject
+    @SuppressWarnings("this-escape")
     public Engine(final Gson gson, final Registry registry, final Config config,
             final MqttClientPersistence persistence) throws MqttException {
-        String topicPrefix = config.getString(Settings.TOPIC_PREFIX).replaceFirst("^/+", "");
+        String topicPrefix = config.getString(Settings.TOPIC_PREFIX);
         if (!topicPrefix.isEmpty() && !topicPrefix.endsWith("/")) {
             topicPrefix += "/";
         }
@@ -149,9 +150,25 @@ public class Engine implements MqttCallback, MessagePublisher {
         logger.info("Engine started.");
 
         Application.getApp().setIcon(true);
+
+        for (final Runnable listener : registry.getConnectionListeners()) {
+            try {
+                listener.run();
+            } catch (final Exception exception) {
+                logger.error("Connection listener error: {}", exception.getMessage());
+            }
+        }
     }
 
     private void disconnect() throws MqttException {
+        for (final Runnable listener : registry.getDisconnectionListeners()) {
+            try {
+                listener.run();
+            } catch (final Exception exception) {
+                logger.error("Disconnection listener error: {}", exception.getMessage());
+            }
+        }
+
         Application.getApp().setIcon(false);
 
         client.disconnect();

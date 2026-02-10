@@ -3,9 +3,11 @@ package com.fatico.winthing.messaging;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
@@ -18,6 +20,8 @@ class SimpleRegistry implements Registry {
     private final Map<String, QualityOfService> topicQos = new HashMap<>();
     private final Multimap<String, Consumer<Message>> consumers = HashMultimap.create();
     private final Queue<Message> initialMessages = new LinkedList<>();
+    private final List<Runnable> connectionListeners = new ArrayList<>();
+    private final List<Runnable> disconnectionListeners = new ArrayList<>();
     private Message will = null;
 
     @Override
@@ -66,6 +70,26 @@ class SimpleRegistry implements Registry {
     @Override
     public Optional<Message> getWill() {
         return Optional.ofNullable(will);
+    }
+
+    @Override
+    public void addConnectionListener(final Runnable listener) {
+        connectionListeners.add(listener);
+    }
+
+    @Override
+    public void addDisconnectionListener(final Runnable listener) {
+        disconnectionListeners.add(listener);
+    }
+
+    @Override
+    public List<Runnable> getConnectionListeners() {
+        return connectionListeners;
+    }
+
+    @Override
+    public List<Runnable> getDisconnectionListeners() {
+        return disconnectionListeners;
     }
 
 }

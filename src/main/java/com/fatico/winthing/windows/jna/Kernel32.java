@@ -8,7 +8,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 @SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_INTERFACE")
 public interface Kernel32 extends com.sun.jna.platform.win32.Kernel32 {
 
-    Kernel32 INSTANCE = (Kernel32) Native.load(
+    Kernel32 INSTANCE = Native.load(
         "kernel32",
         Kernel32.class,
         W32APIOptions.DEFAULT_OPTIONS
@@ -17,6 +17,10 @@ public interface Kernel32 extends com.sun.jna.platform.win32.Kernel32 {
     boolean SetSystemPowerState(
         boolean fSuspend,
         boolean fForce
+    );
+
+    boolean GetSystemPowerStatus(
+        SystemPowerStatus result
     );
 
 }

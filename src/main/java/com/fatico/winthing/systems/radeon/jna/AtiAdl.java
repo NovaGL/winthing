@@ -22,7 +22,7 @@ import java.util.List;
     "UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"})
 public interface AtiAdl extends Library {
 
-    AtiAdl INSTANCE = (AtiAdl) Native.load(
+    AtiAdl INSTANCE = Native.load(
         Platform.is64Bit() ? "atiadlxx" : "atiadlxy",
         AtiAdl.class
     );

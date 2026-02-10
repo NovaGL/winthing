@@ -27,6 +27,7 @@ public class ApplicationModule extends AbstractModule {
             install(new com.fatico.winthing.systems.system.Module());
             install(new com.fatico.winthing.systems.keyboard.Module());
             install(new com.fatico.winthing.systems.desktop.Module());
+            install(new com.fatico.winthing.systems.monitoring.Module());
         }
     }
 

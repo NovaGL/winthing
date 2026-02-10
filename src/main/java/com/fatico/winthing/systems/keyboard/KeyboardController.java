@@ -17,6 +17,7 @@ public class KeyboardController extends BaseController {
     private final KeyboardService keyboardService;
 
     @Inject
+    @SuppressWarnings("this-escape")
     public KeyboardController(final Registry registry, final KeyboardService keyboardService) {
         super("keyboard");
         this.keyboardService = Objects.requireNonNull(keyboardService);

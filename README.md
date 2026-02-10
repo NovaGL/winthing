@@ -10,14 +10,14 @@ A modular background service that makes Windows remotely controllable through MQ
 
 ## Requirements
 
-Java 8 or greater.
+Java 21 or greater.
 
 ## Running
 
 Download either JAR or EXE file from [Releases page](https://github.com/msiedlarek/winthing/releases) and execute it:
 
-	target/winthing-1.4.2.exe
-    java -jar target/winthing-1.4.2.jar
+	target/winthing-1.5.0.exe
+    java -jar target/winthing-1.5.0.jar
 
 ## Configuration
 
@@ -29,8 +29,9 @@ Configuration parameters can be passed from command line or they can be placed i
 <tr><td>username</td><td>Username used when connecting to MQTT broker</td><td>mqtt</td></tr>
 <tr><td>password</td><td>Password used when connecting to MQTT broker</td><td>mqtt</td></tr>
 <tr><td>clientid</td><td>Client ID to present to the broker</td><td>WinThing</td></tr>
-<tr><td>prefix</td><td>Prefix for all MQTT topics used by this WinThing instance</td><td>winthing</td></tr>
+<tr><td>prefix</td><td>Prefix for all MQTT topics used by this WinThing instance. Leading slashes are preserved for brokers that require them.</td><td>winthing</td></tr>
 <tr><td>reconnect</td><td>Time interval between connection attempts in seconds</td><td>5</td></tr>
+<tr><td>monitoring_interval</td><td>How often to publish system monitoring data in seconds</td><td>30</td></tr>
 </table>
 
 ### Command line parameters
@@ -134,6 +135,34 @@ If whitelist is enabled, only the command as unique identifier is required. The 
 
 Opens an URI, like a website in a browser or a disk location in a file browser.
 
+#### Media Controls
+
+**Topic:** winthing/system/commands/media_play_pause<br>
+**Payload:** -
+
+Toggles media play/pause. This command is only executed when explicitly sent; it is never auto-triggered on MQTT connect or reconnect.
+
+---
+
+**Topic:** winthing/system/commands/media_next<br>
+**Payload:** -
+
+Skips to the next media track.
+
+---
+
+**Topic:** winthing/system/commands/media_prev<br>
+**Payload:** -
+
+Goes back to the previous media track.
+
+---
+
+**Topic:** winthing/system/commands/media_stop<br>
+**Payload:** -
+
+Stops media playback.
+
 #### Desktop
 
 **Topic:** winthing/desktop/commands/close_active_window<br>
@@ -154,6 +183,50 @@ Puts the display to sleep (on true) or wakes it up (on false).
 **Payload:** [key:string...]
 
 Simulates pressing of given set of keyboard keys. Keys are specified by name. List of available key names and aliases can be found [here](src/main/java/com/fatico/winthing/windows/input/KeyboardKey.java).
+
+### Monitoring
+
+WinThing periodically publishes system monitoring data. The interval is configurable via the `monitoring_interval` setting (default: 30 seconds). Monitoring data is published automatically while WinThing is connected to the MQTT broker.
+
+#### CPU Usage
+
+**Topic:** winthing/system/monitoring/cpu_usage<br>
+**Payload:** cpuPercent:number<br>
+**QoS:** 0
+
+Current system CPU usage as a percentage (0.0 - 100.0).
+
+---
+
+#### Memory
+
+**Topic:** winthing/system/monitoring/memory<br>
+**Payload:** `{"total_mb":number, "available_mb":number, "used_mb":number, "usage_percent":number}`<br>
+**QoS:** 0
+
+Current system memory information in megabytes and usage percentage.
+
+---
+
+#### Battery
+
+**Topic:** winthing/system/monitoring/battery<br>
+**Payload:** `{"ac_plugged":boolean, "level":number, "remaining_seconds":number}`<br>
+**QoS:** 0
+
+Battery information. Only published on systems with a battery. `level` is 0-100 percent. `remaining_seconds` is the estimated battery life remaining (omitted if unknown).
+
+---
+
+#### Now Playing
+
+**Topic:** winthing/system/monitoring/now_playing<br>
+**Payload:** title:string<br>
+**QoS:** 0
+
+The window title of a detected media player (Spotify, VLC, foobar2000, MusicBee, AIMP, Winamp, iTunes, YouTube in browser, etc.). An empty string is published when nothing is playing. Detection is **read-only** (window title scanning only) and will never cause media to play, pause, or resume, including after waking from hibernation or sleep.
+
+---
 
 #### ATI Radeon display driver
 
