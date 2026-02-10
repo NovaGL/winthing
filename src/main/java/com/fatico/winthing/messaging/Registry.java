@@ -1,6 +1,7 @@
 package com.fatico.winthing.messaging;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
@@ -15,5 +16,9 @@ public interface Registry extends RegistryConfigurator {
     Queue<Message> getInitialMessages();
 
     Optional<Message> getWill();
+
+    List<Runnable> getConnectionListeners();
+
+    List<Runnable> getDisconnectionListeners();
 
 }

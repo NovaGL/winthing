@@ -12,6 +12,7 @@ public class DesktopController extends BaseController {
     private final DesktopService desktopService;
 
     @Inject
+    @SuppressWarnings("this-escape")
     public DesktopController(final Registry registry, final DesktopService desktopService) {
         super("desktop");
         this.desktopService = Objects.requireNonNull(desktopService);

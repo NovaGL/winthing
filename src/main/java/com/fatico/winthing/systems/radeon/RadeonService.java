@@ -7,18 +7,21 @@ import com.sun.jna.Memory;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
+import java.lang.ref.Cleaner;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
-@SuppressWarnings({"checkstyle:nofinalizer"})
 public class RadeonService {
+
+    private static final Cleaner CLEANER = Cleaner.create();
 
     private final AtiAdl atiAdl;
     private final Pointer context;
 
     @Inject
+    @SuppressWarnings("this-escape")
     public RadeonService(final AtiAdl atiAdl) {
         this.atiAdl = Objects.requireNonNull(atiAdl);
         {
@@ -33,13 +36,22 @@ public class RadeonService {
             }
             this.context = contextReference.getValue();
         }
+        CLEANER.register(this, new CleanupAction(atiAdl, context));
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
-    protected void finalize() throws Throwable {
-        atiAdl.ADL2_Main_Control_Destroy(context);
-        super.finalize();
+    private static class CleanupAction implements Runnable {
+        private final AtiAdl atiAdl;
+        private final Pointer context;
+
+        CleanupAction(final AtiAdl atiAdl, final Pointer context) {
+            this.atiAdl = atiAdl;
+            this.context = context;
+        }
+
+        @Override
+        public void run() {
+            atiAdl.ADL2_Main_Control_Destroy(context);
+        }
     }
 
     public int getPrimaryAdapterIndex() {

@@ -5,7 +5,7 @@
 
   <groupId>com.fatico</groupId>
   <artifactId>winthing</artifactId>
-  <version>1.4.2</version>
+  <version>1.5.0</version>
 
   <name>WinThing</name>
   <description>Remotely control Windows through MQTT.</description>
@@ -39,21 +39,21 @@
   </developers>
 
   <properties>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.source>21</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
-    <version.slf4j>1.7.30</version.slf4j>
-    <version.logback>1.2.3</version.logback>
-    <version.guava>28.2-jre</version.guava>
-    <version.guice>4.2.3</version.guice>
-    <version.gson>2.8.6</version.gson>
-    <version.paho>1.2.2</version.paho>
-    <version.jna>5.5.0</version.jna>
-    <version.typesafe.config>1.4.0</version.typesafe.config>
-    <version.janino>3.1.2</version.janino>
-    <version.spotbugs>4.0.1</version.spotbugs>
+    <version.slf4j>2.0.16</version.slf4j>
+    <version.logback>1.5.16</version.logback>
+    <version.guava>33.4.0-jre</version.guava>
+    <version.guice>7.0.0</version.guice>
+    <version.gson>2.11.0</version.gson>
+    <version.paho>1.2.5</version.paho>
+    <version.jna>5.16.0</version.jna>
+    <version.typesafe.config>1.4.3</version.typesafe.config>
+    <version.janino>3.1.12</version.janino>
+    <version.spotbugs>4.8.6</version.spotbugs>
   </properties>
 
   <dependencies>
@@ -125,7 +125,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.1.1</version>
+        <version>3.6.0</version>
         <configuration>
           <configLocation>${checkstyle.config}</configLocation>
           <encoding>UTF-8</encoding>
@@ -138,14 +138,14 @@
           <dependency>
             <groupId>com.puppycrawl.tools</groupId>
             <artifactId>checkstyle</artifactId>
-            <version>8.30</version>
+            <version>10.20.2</version>
           </dependency>
         </dependencies>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-pmd-plugin</artifactId>
-        <version>3.13.0</version>
+        <version>3.26.0</version>
         <configuration>
           <printFailingErrors>true</printFailingErrors>
           <verbose>true</verbose>
@@ -155,7 +155,7 @@
       <plugin>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
-        <version>3.1.11</version>
+        <version>4.8.6.6</version>
         <configuration>
           <effort>Max</effort>
           <threshold>Low</threshold>
@@ -165,7 +165,7 @@
             <plugin>
               <groupId>com.h3xstream.findsecbugs</groupId>
               <artifactId>findsecbugs-plugin</artifactId>
-              <version>1.10.1</version>
+              <version>1.13.0</version>
             </plugin>
           </plugins>
         </configuration>
@@ -173,7 +173,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.1</version>
+        <version>3.13.0</version>
         <configuration>
           <compilerArgs>
             <arg>-Xlint</arg>
@@ -184,7 +184,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>3.2.2</version>
+        <version>3.6.0</version>
         <executions>
           <execution>
             <phase>package</phase>
@@ -222,7 +222,7 @@
       <plugin>
         <groupId>com.akathist.maven.plugins.launch4j</groupId>
         <artifactId>launch4j-maven-plugin</artifactId>
-        <version>1.7.25</version>
+        <version>2.5.2</version>
         <executions>
           <execution>
             <id>l4j-clui</id>

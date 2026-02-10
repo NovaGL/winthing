@@ -8,7 +8,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 @SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_INTERFACE")
 public interface User32 extends com.sun.jna.platform.win32.User32 {
 
-    User32 INSTANCE = (User32) Native.load(
+    User32 INSTANCE = Native.load(
         "user32",
         User32.class,
         W32APIOptions.DEFAULT_OPTIONS

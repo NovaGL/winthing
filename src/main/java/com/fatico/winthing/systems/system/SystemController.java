@@ -4,23 +4,30 @@ import com.fatico.winthing.common.BaseController;
 import com.fatico.winthing.messaging.Message;
 import com.fatico.winthing.messaging.QualityOfService;
 import com.fatico.winthing.messaging.Registry;
+import com.fatico.winthing.systems.keyboard.KeyboardService;
 import com.fatico.winthing.windows.SystemException;
+import com.fatico.winthing.windows.input.KeyboardKey;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonPrimitive;
 import com.google.inject.Inject;
+import java.util.Collections;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
 public class SystemController extends BaseController {
 
     private final SystemService systemService;
+    private final KeyboardService keyboardService;
     private final SystemCommander systemCommander;
 
     @Inject
-    public SystemController(final Registry registry, final SystemService systemService)
+    @SuppressWarnings("this-escape")
+    public SystemController(final Registry registry, final SystemService systemService,
+            final KeyboardService keyboardService)
             throws SystemException {
         super("system");
         this.systemService = Objects.requireNonNull(systemService);
+        this.keyboardService = Objects.requireNonNull(keyboardService);
         registry.queueInitialMessage(
             makeMessage(
                 "online",
@@ -43,6 +50,10 @@ public class SystemController extends BaseController {
         registry.subscribe(prefix + "commands/reboot", this::reboot);
         registry.subscribe(prefix + "commands/open", this::open);
         registry.subscribe(prefix + "commands/run", this::run);
+        registry.subscribe(prefix + "commands/media_play_pause", this::mediaPlayPause);
+        registry.subscribe(prefix + "commands/media_next", this::mediaNext);
+        registry.subscribe(prefix + "commands/media_prev", this::mediaPrev);
+        registry.subscribe(prefix + "commands/media_stop", this::mediaStop);
 
         systemCommander = new SystemCommander();
         systemCommander.parseConfig();
@@ -97,6 +108,46 @@ public class SystemController extends BaseController {
             throw new IllegalArgumentException("Invalid arguments.");
         }
         systemService.open(uri);
+    }
+
+    /**
+     * Toggles media play/pause.
+     * This is a command-only handler; it is never auto-triggered on MQTT connect.
+     */
+    public void mediaPlayPause(final Message message) {
+        keyboardService.pressKeys(
+            Collections.singletonList(KeyboardKey.MEDIA_PLAY_PAUSE)
+        );
+    }
+
+    /**
+     * Skips to the next media track.
+     * This is a command-only handler; it is never auto-triggered on MQTT connect.
+     */
+    public void mediaNext(final Message message) {
+        keyboardService.pressKeys(
+            Collections.singletonList(KeyboardKey.MEDIA_NEXT_TRACK)
+        );
+    }
+
+    /**
+     * Goes back to the previous media track.
+     * This is a command-only handler; it is never auto-triggered on MQTT connect.
+     */
+    public void mediaPrev(final Message message) {
+        keyboardService.pressKeys(
+            Collections.singletonList(KeyboardKey.MEDIA_PREV_TRACK)
+        );
+    }
+
+    /**
+     * Stops media playback.
+     * This is a command-only handler; it is never auto-triggered on MQTT connect.
+     */
+    public void mediaStop(final Message message) {
+        keyboardService.pressKeys(
+            Collections.singletonList(KeyboardKey.MEDIA_STOP)
+        );
     }
 
 }

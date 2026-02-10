@@ -13,6 +13,7 @@ public class RadeonController extends BaseController {
     private final RadeonService radeonService;
 
     @Inject
+    @SuppressWarnings("this-escape")
     public RadeonController(final Registry registry, final RadeonService radeonService) {
         super("radeon");
         this.radeonService = Objects.requireNonNull(radeonService);

@@ -13,4 +13,8 @@ public interface RegistryConfigurator {
 
     void setWill(final Message message);
 
+    void addConnectionListener(final Runnable listener);
+
+    void addDisconnectionListener(final Runnable listener);
+
 }
