@@ -24,22 +24,43 @@ Download either JAR or EXE file from [Releases page](https://github.com/msiedlar
 Configuration parameters can be passed from command line or they can be placed in configuration files in the working directory from where you launch WinThing.
 
 <table>
-<tr><th>Property</th><th>Description</th><th>Default</th>
-<tr><td>broker</td><td>URL of the MQTT broker to use</td><td>127.0.0.1:1883</td></tr>
-<tr><td>mqtt_protocol</td><td>Protocol to use for MQTT connection: "tcp", "ssl", or "tls". Use "ssl" for encrypted connections (recommended)</td><td>ssl</td></tr>
-<tr><td>username</td><td>Username used when connecting to MQTT broker</td><td>mqtt</td></tr>
-<tr><td>password</td><td>Password used when connecting to MQTT broker</td><td>mqtt</td></tr>
-<tr><td>clientid</td><td>Client ID to present to the broker</td><td>WinThing</td></tr>
-<tr><td>prefix</td><td>Prefix for all MQTT topics used by this WinThing instance. Leading slashes are preserved for brokers that require them.</td><td>winthing</td></tr>
-<tr><td>reconnect</td><td>Time interval between connection attempts in seconds</td><td>5</td></tr>
-<tr><td>monitoring_interval</td><td>How often to publish system monitoring data in seconds</td><td>30</td></tr>
+<tr><th>Property</th><th>Description</th><th>Default</th><th>Env Variable</th>
+<tr><td>broker</td><td>URL of the MQTT broker to use</td><td>127.0.0.1:1883</td><td>WINTHING_BROKER</td></tr>
+<tr><td>mqtt_protocol</td><td>Protocol to use for MQTT connection: "tcp", "ssl", or "tls". Use "ssl" for encrypted connections (recommended)</td><td>ssl</td><td>WINTHING_MQTT_PROTOCOL</td></tr>
+<tr><td>username</td><td>Username used when connecting to MQTT broker</td><td>mqtt</td><td>WINTHING_USERNAME</td></tr>
+<tr><td>password</td><td>Password used when connecting to MQTT broker</td><td>mqtt</td><td>WINTHING_PASSWORD</td></tr>
+<tr><td>clientid</td><td>Client ID to present to the broker</td><td>WinThing</td><td>WINTHING_CLIENT_ID</td></tr>
+<tr><td>prefix</td><td>Prefix for all MQTT topics used by this WinThing instance. Leading slashes are preserved for brokers that require them.</td><td>winthing</td><td>WINTHING_PREFIX</td></tr>
+<tr><td>reconnect</td><td>Time interval between connection attempts in seconds</td><td>5</td><td>-</td></tr>
+<tr><td>monitoring_interval</td><td>How often to publish system monitoring data in seconds</td><td>30</td><td>-</td></tr>
+<tr><td>homeassistant_discovery</td><td>Enable Home Assistant MQTT Auto-Discovery</td><td>true</td><td>WINTHING_HA_DISCOVERY</td></tr>
+<tr><td>homeassistant_prefix</td><td>Home Assistant discovery topic prefix</td><td>homeassistant</td><td>WINTHING_HA_PREFIX</td></tr>
+<tr><td>device_name</td><td>Friendly device name for Home Assistant</td><td>hostname</td><td>WINTHING_DEVICE_NAME</td></tr>
 </table>
+
+### Configuration Priority
+
+WinThing loads configuration from multiple sources in this order (highest priority first):
+
+1. **System Properties** (command line: `-Dkey=value`)
+2. **Environment Variables** (e.g., `WINTHING_BROKER`)
+3. **winthing.conf** file (in working directory)
+4. **Built-in Defaults**
 
 ### Command line parameters
 
 Example how to pass parameters from command line:
 
 	java -Dbroker="127.0.0.1:1883" -jar winthing-1.2.0.jar
+
+### Environment variables
+
+For better security, use environment variables instead of command-line parameters:
+
+	export WINTHING_BROKER="192.168.1.100:8883"
+	export WINTHING_MQTT_PROTOCOL="ssl"
+	export WINTHING_PASSWORD="secret"
+	java -jar winthing-1.5.0.jar
 
 ### winthing.conf
 
@@ -61,6 +82,53 @@ Example file:
 	adobe = "c:\\program files\\adobe\\reader.exe"
 
 *Note you can use slash* ' / ' *or double backslash* ' \\\\ ' *as path separator.*
+
+## Home Assistant Integration
+
+WinThing supports **MQTT Auto-Discovery** for seamless integration with Home Assistant. When enabled, all sensors, buttons, and switches automatically appear in Home Assistant without manual configuration.
+
+### Features
+
+**Automatic Discovery** - All entities appear in Home Assistant on connection
+**Device Grouping** - All sensors/controls grouped under one device
+**Rich Metadata** - Proper device classes, icons, and units pre-configured
+**Zero Configuration** - Works out of the box with default settings
+
+### What Gets Discovered
+
+**Sensors** (Read-only monitoring):
+- Online/Offline status
+- CPU usage (%)
+- Memory usage and availability (MB, %)
+- Battery level and charging status
+- Now playing media
+
+**Buttons** (One-time actions):
+- Shutdown, Reboot, Suspend, Hibernate
+- Media controls (Play/Pause, Next, Previous, Stop)
+
+**Switches** (On/Off controls):
+- Display sleep
+
+### Configuration
+
+```conf
+# winthing.conf
+homeassistant_discovery = true              # Enable discovery (default: true)
+homeassistant_prefix = "homeassistant"      # HA discovery prefix (default)
+device_name = "My Desktop PC"               # Friendly name in HA (default: hostname)
+```
+
+### Example Home Assistant Result
+
+After WinThing connects, you'll see a device named "My Desktop PC" with all entities:
+- `sensor.my_desktop_pc_cpu_usage`
+- `sensor.my_desktop_pc_memory_usage`
+- `button.my_desktop_pc_shutdown`
+- `switch.my_desktop_pc_display_sleep`
+- etc.
+
+All entities include proper icons, units, and device classes for seamless integration.
 
 ## Security Considerations
 
