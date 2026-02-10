@@ -16,6 +16,11 @@ import java.util.Objects;
 public class RadeonService {
 
     private static final Cleaner CLEANER = Cleaner.create();
+    private static final int MIN_WIDTH = 640;
+    private static final int MIN_HEIGHT = 480;
+    private static final int MAX_WIDTH = 7680;   // 8K resolution
+    private static final int MAX_HEIGHT = 4320;
+    private static final int MAX_REFRESH_RATE = 240;  // Hz
 
     private final AtiAdl atiAdl;
     private final Pointer context;
@@ -72,10 +77,37 @@ public class RadeonService {
     }
 
     public void setResolution(final int adapterIndex, final int width, final int height) {
+        validateResolution(width, height);
         final AtiAdl.ADLMode mode = getBestMode(adapterIndex);
         mode.iXRes = width;
         mode.iYRes = height;
         setMode(adapterIndex, mode);
+    }
+
+    private void validateResolution(int width, int height) {
+        if (width < MIN_WIDTH || width > MAX_WIDTH) {
+            throw new AdlException(
+                "Width out of valid range (" + MIN_WIDTH + "-" + MAX_WIDTH + "): " + width,
+                -1
+            );
+        }
+        if (height < MIN_HEIGHT || height > MAX_HEIGHT) {
+            throw new AdlException(
+                "Height out of valid range (" + MIN_HEIGHT + "-" + MAX_HEIGHT + "): " + height,
+                -1
+            );
+        }
+    }
+
+    private AtiAdl.ADLMode validateMode(AtiAdl.ADLMode mode) {
+        if (mode.iXRes < MIN_WIDTH || mode.iXRes > MAX_WIDTH
+                || mode.iYRes < MIN_HEIGHT || mode.iYRes > MAX_HEIGHT) {
+            throw new AdlException("Resolution out of bounds", -1);
+        }
+        if (mode.fRefreshRate > MAX_REFRESH_RATE) {
+            throw new AdlException("Refresh rate too high", -1);
+        }
+        return mode;
     }
 
     private void setMode(final int adapterIndex, final AtiAdl.ADLMode mode) {

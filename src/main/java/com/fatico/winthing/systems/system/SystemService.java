@@ -17,6 +17,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Executes system commands via Windows API.
+ *
+ * <p>WARNING: This class performs privileged operations. All inputs must be
+ * validated against the SystemCommander whitelist before calling this class.
+ *
+ * <p>Security Considerations:
+ * <ul>
+ *   <li>All commands are executed through Windows ShellExecute API</li>
+ *   <li>Command parameters must be validated to prevent injection attacks</li>
+ *   <li>Enforce strict whitelist checking in caller (SystemController)</li>
+ *   <li>Working directory paths are validated to prevent traversal attacks</li>
+ * </ul>
+ *
+ * <p>The service automatically escalates privileges required for shutdown/reboot
+ * operations on initialization.
+ *
+ * @since 1.0.0
+ * @see SystemCommander
+ * @see SystemController
+ */
 public class SystemService {
 
     private static final List<String> REQUIRED_PRIVILEGES = ImmutableList.of(

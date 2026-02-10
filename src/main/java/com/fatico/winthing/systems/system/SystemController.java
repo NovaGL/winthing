@@ -10,11 +10,18 @@ import com.fatico.winthing.windows.input.KeyboardKey;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonPrimitive;
 import com.google.inject.Inject;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 public class SystemController extends BaseController {
+
+    private static final int MAX_COMMAND_LENGTH = 256;
+    private static final int MAX_PARAMETERS_LENGTH = 8192;
+    private static final Pattern SAFE_COMMAND_PATTERN = Pattern.compile("[a-zA-Z0-9._\\-]+");
 
     private final SystemService systemService;
     private final KeyboardService keyboardService;
@@ -82,9 +89,11 @@ public class SystemController extends BaseController {
 
         try {
             final JsonArray arguments = message.getPayload().get().getAsJsonArray();
-            command = arguments.get(0).getAsString();
-            parameters = arguments.size() > 1 ? arguments.get(1).getAsString() : "";
-            workingDirectory = arguments.size() > 2 ? arguments.get(2).getAsString() : null;
+            command = validateCommand(arguments.get(0).getAsString());
+            parameters = arguments.size() > 1
+                ? validateParameters(arguments.get(1).getAsString()) : "";
+            workingDirectory = arguments.size() > 2
+                ? validateWorkingDirectory(arguments.get(2).getAsString()) : null;
         } catch (final NoSuchElementException | IllegalStateException exception) {
             throw new IllegalArgumentException("Invalid arguments.");
         }
@@ -98,6 +107,53 @@ public class SystemController extends BaseController {
         }
 
         systemService.run(command, parameters, workingDirectory);
+    }
+
+    private String validateCommand(String command) {
+        if (command == null || command.isEmpty()) {
+            throw new SystemException("Command cannot be empty");
+        }
+        if (command.length() > MAX_COMMAND_LENGTH) {
+            throw new SystemException("Command exceeds maximum length");
+        }
+        if (!SAFE_COMMAND_PATTERN.matcher(command).matches()) {
+            throw new SystemException("Command contains invalid characters");
+        }
+        return command;
+    }
+
+    private String validateParameters(String parameters) {
+        if (parameters == null) {
+            return "";
+        }
+        if (parameters.length() > MAX_PARAMETERS_LENGTH) {
+            throw new SystemException("Parameters exceed maximum length");
+        }
+        // Check for command injection patterns
+        if (parameters.contains("&") || parameters.contains("|")
+                || parameters.contains(";") || parameters.contains("`")) {
+            throw new SystemException("Parameters contain potentially dangerous characters");
+        }
+        return parameters;
+    }
+
+    private String validateWorkingDirectory(String directory) {
+        if (directory == null) {
+            return null;
+        }
+
+        // Prevent path traversal
+        Path dir = Paths.get(directory).toAbsolutePath().normalize();
+
+        // Ensure within allowed directories (home or temp)
+        Path userHome = Paths.get(System.getProperty("user.home"));
+        Path temp = Paths.get(System.getProperty("java.io.tmpdir"));
+
+        if (!dir.startsWith(userHome) && !dir.startsWith(temp)) {
+            throw new SystemException("Working directory not in allowed path");
+        }
+
+        return dir.toString();
     }
 
     public void open(final Message message) {

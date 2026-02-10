@@ -26,6 +26,7 @@ Configuration parameters can be passed from command line or they can be placed i
 <table>
 <tr><th>Property</th><th>Description</th><th>Default</th>
 <tr><td>broker</td><td>URL of the MQTT broker to use</td><td>127.0.0.1:1883</td></tr>
+<tr><td>mqtt_protocol</td><td>Protocol to use for MQTT connection: "tcp", "ssl", or "tls". Use "ssl" for encrypted connections (recommended)</td><td>ssl</td></tr>
 <tr><td>username</td><td>Username used when connecting to MQTT broker</td><td>mqtt</td></tr>
 <tr><td>password</td><td>Password used when connecting to MQTT broker</td><td>mqtt</td></tr>
 <tr><td>clientid</td><td>Client ID to present to the broker</td><td>WinThing</td></tr>
@@ -60,6 +61,46 @@ Example file:
 	adobe = "c:\\program files\\adobe\\reader.exe"
 
 *Note you can use slash* ' / ' *or double backslash* ' \\\\ ' *as path separator.*
+
+## Security Considerations
+
+WinThing provides remote control capabilities for Windows systems. Follow these security best practices:
+
+### Command Execution Protection
+
+1. **Whitelist is REQUIRED**: The `winthing.ini` whitelist file is now mandatory. WinThing will not start without it. This prevents arbitrary command execution.
+2. **Input Validation**: All command parameters are validated to prevent injection attacks. Commands with potentially dangerous characters (&, |, ;, `) are rejected.
+3. **Path Traversal Protection**: Working directory paths are validated to ensure they stay within user home or temp directories.
+
+### Network Security
+
+1. **Use TLS/SSL**: Configure MQTT with SSL encryption to protect credentials and commands in transit.
+   ```
+   mqtt_protocol = "ssl"
+   broker = "your-broker.example.com:8883"
+   ```
+2. **Secure Broker**: Only connect to trusted MQTT brokers with strong authentication enabled.
+3. **Network Isolation**: Run WinThing on trusted networks only. Use firewall rules to restrict MQTT broker access.
+
+### Configuration Security
+
+1. **File-based Credentials**: Use `winthing.conf` file instead of command-line parameters to avoid password exposure in process lists.
+2. **File Permissions**: Restrict access to `winthing.conf` (contains credentials) to authorized users only.
+3. **Never Commit Secrets**: Do not commit credentials to version control. Use environment variables or secure vaults.
+
+### Monitoring
+
+1. **Review Logs**: Regularly check logs for suspicious activity or unauthorized command attempts.
+2. **Audit Whitelist**: Periodically review `winthing.ini` to ensure only necessary commands are whitelisted.
+3. **Update Regularly**: Keep WinThing and Java runtime updated for security patches.
+
+### Defense in Depth
+
+Even with these protections, WinThing grants significant system access. Consider:
+- Running WinThing with a limited user account (not Administrator) when possible
+- Using Windows Firewall to restrict outbound connections
+- Monitoring MQTT traffic for anomalies
+- Implementing rate limiting on MQTT broker to prevent abuse
 
 ## Logging
 

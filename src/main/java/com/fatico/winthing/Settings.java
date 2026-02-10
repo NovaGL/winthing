@@ -9,4 +9,5 @@ public abstract class Settings {
     public static final String TOPIC_PREFIX = "prefix";
     public static final String RECONNECT_INTERVAL = "reconnect";
     public static final String MONITORING_INTERVAL = "monitoring_interval";
+    public static final String MQTT_PROTOCOL = "mqtt_protocol";
 }
