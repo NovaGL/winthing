@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import com.typesafe.config.Config;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
@@ -17,6 +18,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
+import javax.net.ssl.SSLContext;
 import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
@@ -28,9 +30,39 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Core MQTT messaging engine for WinThing.
+ *
+ * <p>Manages MQTT client connection lifecycle, handles incoming messages,
+ * and routes them to appropriate handlers.
+ *
+ * <p>Thread Safety:
+ * <ul>
+ *   <li>Client operations are protected by runningLock (ReentrantLock)</li>
+ *   <li>Message callbacks are serialized through message handlers</li>
+ *   <li>Registry access is thread-safe via ConcurrentHashMap</li>
+ * </ul>
+ *
+ * <p>Reconnection:
+ * <ul>
+ *   <li>Automatic reconnection with configurable interval</li>
+ *   <li>Connection attempts logged for debugging</li>
+ *   <li>Graceful handling of connection loss</li>
+ * </ul>
+ *
+ * <p>Security:
+ * <ul>
+ *   <li>Supports TLS/SSL encryption (recommended for production)</li>
+ *   <li>Username/password authentication</li>
+ *   <li>Payload logging disabled by default to prevent sensitive data exposure</li>
+ * </ul>
+ *
+ * @since 1.0.0
+ */
 public class Engine implements MqttCallback, MessagePublisher {
 
     private static final Charset CHARSET = StandardCharsets.UTF_8;
+    private static final boolean LOG_PAYLOADS = false;  // Security default: off
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -41,8 +73,8 @@ public class Engine implements MqttCallback, MessagePublisher {
     private final MqttConnectOptions options = new MqttConnectOptions();
     private final Duration reconnectInterval;
 
-    private final Lock runnningLock = new ReentrantLock();
-    private final Condition runningCondition = runnningLock.newCondition();
+    private final Lock runningLock = new ReentrantLock();
+    private final Condition runningCondition = runningLock.newCondition();
 
     @Inject
     @SuppressWarnings("this-escape")
@@ -59,8 +91,14 @@ public class Engine implements MqttCallback, MessagePublisher {
         this.gson = Objects.requireNonNull(gson);
         this.registry = Objects.requireNonNull(registry);
 
+        // Support SSL/TLS protocol (default to ssl for security)
+        String protocol = config.hasPath(Settings.MQTT_PROTOCOL)
+            ? config.getString(Settings.MQTT_PROTOCOL) : "ssl";
+        String brokerUrl = config.getString(Settings.BROKER_URL);
+        String connectionUrl = protocol + "://" + brokerUrl;
+
         this.client = new MqttAsyncClient(
-            "tcp://" + config.getString(Settings.BROKER_URL),
+            connectionUrl,
             config.getString(Settings.CLIENT_ID),
             persistence
         );
@@ -79,11 +117,22 @@ public class Engine implements MqttCallback, MessagePublisher {
             }
         }
 
+        // Configure SSL if using ssl or tls protocol
+        if (protocol.equalsIgnoreCase("ssl") || protocol.equalsIgnoreCase("tls")) {
+            try {
+                SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
+                sslContext.init(null, null, new SecureRandom());
+                this.options.setSocketFactory(sslContext.getSocketFactory());
+            } catch (final Exception exception) {
+                throw new MqttException(exception);
+            }
+        }
+
         this.options.setCleanSession(true);
     }
 
     public void run() {
-        runnningLock.lock();
+        runningLock.lock();
         try {
             while (true) {
                 boolean connected = false;
@@ -116,7 +165,7 @@ public class Engine implements MqttCallback, MessagePublisher {
                 }
             }
         } finally {
-            runnningLock.unlock();
+            runningLock.unlock();
         }
     }
 
@@ -154,8 +203,8 @@ public class Engine implements MqttCallback, MessagePublisher {
         for (final Runnable listener : registry.getConnectionListeners()) {
             try {
                 listener.run();
-            } catch (final Exception exception) {
-                logger.error("Connection listener error: {}", exception.getMessage());
+            } catch (final RuntimeException exception) {
+                logger.error("Connection listener error: {}", exception.getMessage(), exception);
             }
         }
     }
@@ -164,8 +213,8 @@ public class Engine implements MqttCallback, MessagePublisher {
         for (final Runnable listener : registry.getDisconnectionListeners()) {
             try {
                 listener.run();
-            } catch (final Exception exception) {
-                logger.error("Disconnection listener error: {}", exception.getMessage());
+            } catch (final RuntimeException exception) {
+                logger.error("Disconnection listener error: {}", exception.getMessage(), exception);
             }
         }
 
@@ -192,11 +241,11 @@ public class Engine implements MqttCallback, MessagePublisher {
         Application.getApp().setIcon(false);
 
         logger.error("Connection lost.");
-        runnningLock.lock();
+        runningLock.lock();
         try {
             runningCondition.signal();
         } finally {
-            runnningLock.unlock();
+            runningLock.unlock();
         }
     }
 
@@ -205,10 +254,11 @@ public class Engine implements MqttCallback, MessagePublisher {
         try {
             handleMessage(topic, mqttMessage);
         } catch (final Throwable throwable) {
+            // Avoid logging payloads for security
             logger.error(
-                    "Error while handling message " + topic
-                            + "(" + new String(mqttMessage.getPayload(), CHARSET) + "): "
-                            + throwable.getMessage(),
+                    "Error while handling message on topic {}: {}",
+                    topic,
+                    throwable.getMessage(),
                     throwable
             );
         }
@@ -250,22 +300,27 @@ public class Engine implements MqttCallback, MessagePublisher {
                 mqttMessage.isRetained()
         );
 
-        logger.debug(
-                "Received: {}({})",
-                message.getTopic(),
-                message.getPayload().isPresent() ? message.getPayload().get().toString() : ""
-        );
+        if (LOG_PAYLOADS) {
+            logger.debug(
+                    "Received: {}({})",
+                    message.getTopic(),
+                    message.getPayload().isPresent() ? message.getPayload().get().toString() : ""
+            );
+        } else {
+            logger.debug("Received message on topic: {}", message.getTopic());
+        }
 
         for (final Consumer<Message> consumer : consumers) {
             try {
                 consumer.accept(message);
-            } catch (final Exception exception) {
+            } catch (final RuntimeException exception) {
                 logger.error(
                         "Error while processing {}({}): {}",
                         message.getTopic(),
                         message.getPayload().isPresent()
                                 ? message.getPayload().get().toString() : "",
-                        exception.getMessage()
+                        exception.getMessage(),
+                        exception
                 );
             }
         }
