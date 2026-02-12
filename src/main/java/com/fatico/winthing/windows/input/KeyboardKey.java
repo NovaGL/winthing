@@ -1,7 +1,6 @@
 package com.fatico.winthing.windows.input;
 
 import com.google.common.collect.ImmutableSet;
-import com.sun.jna.platform.win32.WinDef;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.HashMap;
 import java.util.Map;
@@ -193,17 +192,17 @@ public enum KeyboardKey {
         }
     }
 
-    private final WinDef.WORD virtualKeyCode;
+    private final int virtualKeyCode;
     private final ImmutableSet<String> aliases;
 
     KeyboardKey(final int virtualKeyCode, final String... aliases) {
         assert 0 < virtualKeyCode;
         assert virtualKeyCode < 0xFF;
-        this.virtualKeyCode = new WinDef.WORD(virtualKeyCode);
+        this.virtualKeyCode = virtualKeyCode;
         this.aliases = ImmutableSet.copyOf(aliases);
     }
 
-    public WinDef.WORD getVirtualKeyCode() {
+    public int getVirtualKeyCode() {
         return virtualKeyCode;
     }
 

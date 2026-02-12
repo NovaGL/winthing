@@ -4,4 +4,19 @@
     <!-- False positives for Logback -->
     <Bug pattern="CRLF_INJECTION_LOGS"/>
   </Match>
+  <Match>
+    <!-- Platform-specific classes may use OS-specific APIs -->
+    <Class name="~com\.fatico\.winthing\.platform\.windows\..*"/>
+    <Bug pattern="COMMAND_INJECTION"/>
+  </Match>
+  <Match>
+    <!-- Shell commands in Linux/Mac services are intentional -->
+    <Class name="~com\.fatico\.winthing\.platform\.(linux|mac)\..*"/>
+    <Bug pattern="COMMAND_INJECTION"/>
+  </Match>
+  <Match>
+    <!-- ShellExecutor runs commands by design -->
+    <Class name="com.fatico.winthing.platform.ShellExecutor"/>
+    <Bug pattern="COMMAND_INJECTION"/>
+  </Match>
 </FindBugsFilter>

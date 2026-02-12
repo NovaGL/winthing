@@ -1,15 +1,12 @@
 package com.fatico.winthing.systems.keyboard;
 
-import com.google.inject.PrivateModule;
-import com.google.inject.Singleton;
+import com.google.inject.AbstractModule;
 
-public class Module extends PrivateModule {
+public class Module extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(KeyboardService.class).in(Singleton.class);
         bind(KeyboardController.class).asEagerSingleton();
-        expose(KeyboardService.class);
     }
 
 }

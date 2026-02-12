@@ -1,15 +1,12 @@
 package com.fatico.winthing.systems.system;
 
-import com.google.inject.PrivateModule;
-import com.google.inject.Singleton;
+import com.google.inject.AbstractModule;
 
-public class Module extends PrivateModule {
+public class Module extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(SystemService.class).in(Singleton.class);
         bind(SystemController.class).asEagerSingleton();
-        expose(SystemService.class);
     }
 
 }

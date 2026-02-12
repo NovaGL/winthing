@@ -1,5 +1,6 @@
 package com.fatico.winthing.systems.system;
 
+import com.fatico.winthing.platform.OsDetector;
 import com.fatico.winthing.windows.SystemException;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -21,7 +22,7 @@ import org.slf4j.LoggerFactory;
  * Manages command whitelist for security enforcement.
  *
  * <p>The whitelist defines which commands are allowed to execute via MQTT.
- * Format: winthing.ini (key=path/to/command.exe)
+ * Format: winthing.ini (key=path/to/command)
  *
  * <p>Configuration:
  * <ul>
@@ -110,9 +111,17 @@ public class SystemCommander {
             logger.warn("Whitelisted command not found: " + command);
         }
 
-        if (!Files.isExecutable(commandPath) && !command.endsWith(".exe")
-                && !command.endsWith(".bat") && !command.endsWith(".cmd")) {
-            logger.warn("Whitelisted file may not be executable: " + command);
+        if (!Files.isExecutable(commandPath)) {
+            if (OsDetector.isWindows()) {
+                // On Windows, check for executable extensions
+                if (!command.endsWith(".exe") && !command.endsWith(".bat")
+                        && !command.endsWith(".cmd")) {
+                    logger.warn("Whitelisted file may not be executable: " + command);
+                }
+            } else {
+                logger.warn("Whitelisted file may not be executable: " + command
+                    + " (try: chmod +x " + command + ")");
+            }
         }
     }
 }

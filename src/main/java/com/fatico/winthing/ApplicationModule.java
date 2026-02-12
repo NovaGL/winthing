@@ -1,7 +1,10 @@
 package com.fatico.winthing;
 
 import com.fatico.winthing.messaging.MessagingModule;
-import com.fatico.winthing.windows.WindowsModule;
+import com.fatico.winthing.platform.OsDetector;
+import com.fatico.winthing.platform.linux.LinuxPlatformModule;
+import com.fatico.winthing.platform.mac.MacPlatformModule;
+import com.fatico.winthing.platform.windows.WindowsPlatformModule;
 import com.google.gson.Gson;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -12,10 +15,13 @@ import com.typesafe.config.ConfigParseOptions;
 import com.typesafe.config.ConfigSyntax;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
-import java.util.Locale;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ApplicationModule extends AbstractModule {
     public static final String ConfigFile = "winthing.conf";
+
+    private static final Logger logger = LoggerFactory.getLogger(ApplicationModule.class);
 
     @Override
     protected void configure() {
@@ -23,13 +29,34 @@ public class ApplicationModule extends AbstractModule {
 
         install(new MessagingModule());
         install(new com.fatico.winthing.homeassistant.Module());
-        if (System.getProperty("os.name").toLowerCase(Locale.getDefault()).contains("win")) {
-            install(new WindowsModule());
-            install(new com.fatico.winthing.systems.system.Module());
-            install(new com.fatico.winthing.systems.keyboard.Module());
-            install(new com.fatico.winthing.systems.desktop.Module());
-            install(new com.fatico.winthing.systems.monitoring.Module());
+
+        // Install platform-specific modules
+        switch (OsDetector.getOs()) {
+            case WINDOWS:
+                logger.info("Detected platform: Windows");
+                install(new WindowsPlatformModule());
+                break;
+            case LINUX:
+                logger.info("Detected platform: Linux");
+                install(new LinuxPlatformModule());
+                break;
+            case MAC:
+                logger.info("Detected platform: macOS");
+                install(new MacPlatformModule());
+                break;
+            default:
+                logger.warn("Unknown platform: {}. Falling back to Linux implementation.",
+                    System.getProperty("os.name"));
+                install(new LinuxPlatformModule());
+                break;
         }
+
+        // Install system controllers (platform-independent, they use the
+        // platform-specific service bindings installed above)
+        install(new com.fatico.winthing.systems.system.Module());
+        install(new com.fatico.winthing.systems.keyboard.Module());
+        install(new com.fatico.winthing.systems.desktop.Module());
+        install(new com.fatico.winthing.systems.monitoring.Module());
     }
 
     @Provides

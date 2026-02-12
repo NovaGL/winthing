@@ -1,7 +1,5 @@
 package com.fatico.winthing.windows.input;
 
-import com.sun.jna.platform.win32.WinDef;
-
 public enum MouseButton {
 
     LEFT(1),
@@ -10,15 +8,15 @@ public enum MouseButton {
     X1(5),
     X2(6);
 
-    private final WinDef.WORD virtualKeyCode;
+    private final int virtualKeyCode;
 
     MouseButton(final int virtualKeyCode) {
         assert 0 < virtualKeyCode;
         assert virtualKeyCode < 0xFF;
-        this.virtualKeyCode = new WinDef.WORD(virtualKeyCode);
+        this.virtualKeyCode = virtualKeyCode;
     }
 
-    public WinDef.WORD getVirtualKeyCode() {
+    public int getVirtualKeyCode() {
         return virtualKeyCode;
     }
 
