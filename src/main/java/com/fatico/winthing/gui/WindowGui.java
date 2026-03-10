@@ -8,6 +8,7 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.MenuItem;
 import java.awt.PopupMenu;
@@ -26,12 +27,17 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("serial")
 public class WindowGui extends JFrame {
+    private static final Logger logger = LoggerFactory.getLogger(WindowGui.class);
+
     private final String appName;
     private final String appVersion;
     private Map<Integer, Component> components = new HashMap<Integer, Component>();
+    private boolean headless;
 
     public enum Gui {
         TEXTAREA(0),
@@ -55,9 +61,15 @@ public class WindowGui extends JFrame {
     public WindowGui() {
         appName = Application.class.getPackage().getImplementationTitle();
         appVersion = Application.class.getPackage().getImplementationVersion();
+        headless = GraphicsEnvironment.isHeadless();
     }
 
     public void initialize() throws AWTException {
+        if (headless) {
+            logger.info("Running in headless mode (no GUI).");
+            return;
+        }
+
         setTitle(appName + " " + appVersion);
         setDefaultCloseOperation(HIDE_ON_CLOSE);
         setVisible(false);
@@ -123,22 +135,32 @@ public class WindowGui extends JFrame {
     }
 
     public void setIcon(boolean color) {
-        SystemTray tray = SystemTray.getSystemTray();
-        TrayIcon[] icons = tray.getTrayIcons();
-        if (icons.length > 0) {
-            String name = color ? "favicon-green.png" : "favicon-red.png";
+        if (headless) {
+            return;
+        }
+        try {
+            SystemTray tray = SystemTray.getSystemTray();
+            TrayIcon[] icons = tray.getTrayIcons();
+            if (icons.length > 0) {
+                String name = color ? "favicon-green.png" : "favicon-red.png";
 
-            URL url = getClass().getClassLoader().getResource(name);
-            Image image = Toolkit.getDefaultToolkit().getImage(url);
+                URL url = getClass().getClassLoader().getResource(name);
+                Image image = Toolkit.getDefaultToolkit().getImage(url);
 
-            int trayWidth = tray.getTrayIconSize().width;
-            int trayHeight = tray.getTrayIconSize().height;
-            Image scaled = image.getScaledInstance(trayWidth, trayHeight, Image.SCALE_SMOOTH);
-            icons[0].setImage(scaled);
+                int trayWidth = tray.getTrayIconSize().width;
+                int trayHeight = tray.getTrayIconSize().height;
+                Image scaled = image.getScaledInstance(trayWidth, trayHeight, Image.SCALE_SMOOTH);
+                icons[0].setImage(scaled);
+            }
+        } catch (Exception ex) {
+            logger.debug("Could not set tray icon: {}", ex.getMessage());
         }
     }
 
     public void reload() {
+        if (headless) {
+            return;
+        }
         if (isVisible()) {
             JTextArea area = (JTextArea)components.get(Gui.TEXTAREA.key);
             area.setText(ConsoleLogger.getEvents());
@@ -149,6 +171,9 @@ public class WindowGui extends JFrame {
     }
 
     public void open() {
+        if (headless) {
+            return;
+        }
         pack();
         setLocationRelativeTo(null);
         setVisible(true);
@@ -157,6 +182,9 @@ public class WindowGui extends JFrame {
     }
 
     public void close() {
+        if (headless) {
+            return;
+        }
         setVisible(false);
     }
 

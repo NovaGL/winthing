@@ -3,6 +3,7 @@ package com.fatico.winthing.logging;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
 import com.fatico.winthing.Application;
+import java.awt.GraphicsEnvironment;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.StringJoiner;
@@ -40,11 +41,18 @@ public class ConsoleLogger extends ConsoleAppender<ILoggingEvent> {
         byte[] data = encoder.encode(event);
         events.add(new String(data, StandardCharsets.UTF_8));
 
-        // Batch GUI updates - refresh at most every 500ms
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - lastGuiUpdateTime > GUI_UPDATE_INTERVAL_MS) {
-            Application.getApp().reload();
-            lastGuiUpdateTime = currentTime;
+        // Only update GUI if not headless
+        if (!GraphicsEnvironment.isHeadless()) {
+            // Batch GUI updates - refresh at most every 500ms
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastGuiUpdateTime > GUI_UPDATE_INTERVAL_MS) {
+                try {
+                    Application.getApp().reload();
+                } catch (Exception ex) {
+                    // Ignore GUI errors in headless environments
+                }
+                lastGuiUpdateTime = currentTime;
+            }
         }
     }
 }

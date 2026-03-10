@@ -2,22 +2,39 @@
 
 ![Build Status](https://github.com/msiedlarek/winthing/workflows/build/badge.svg)
 
-A modular background service that makes Windows remotely controllable through MQTT. For home automation and Internet of Things.
-
-## :warning: Deprecation Notice :warning:
-
-**WinThing is no longer actively maintained.** As an alternative, please consider [IOT Link](https://iotlink.gitlab.io/), which is actively maintained and has a lot more features, including most of WinThing's features.
+A modular background service that makes your computer remotely controllable through MQTT. For home automation and Internet of Things. Supports **Windows**, **Linux**, and **macOS**.
 
 ## Requirements
 
 Java 21 or greater.
 
+### Platform-Specific Requirements
+
+**Linux** (optional, for full functionality):
+- `xdotool` - window management and keyboard simulation
+- `xset` - display power management (X11)
+- `playerctl` - media player detection (MPRIS)
+- `systemctl` - power management (shutdown/reboot/suspend/hibernate)
+
+**macOS** (no additional requirements):
+- Uses native `osascript` (AppleScript), `pmset`, and system commands
+
+**Windows** (no additional requirements):
+- Uses native Win32 API via JNA
+
 ## Running
 
-Download either JAR or EXE file from [Releases page](https://github.com/msiedlarek/winthing/releases) and execute it:
+Download the JAR file from [Releases page](https://github.com/msiedlarek/winthing/releases) and execute it:
 
-	target/winthing-1.5.0.exe
-    java -jar target/winthing-1.5.0.jar
+    java -jar winthing-2.0.0.jar
+
+On Windows, you can also use the `.exe` wrapper:
+
+    winthing-2.0.0.exe
+
+For Linux/macOS headless servers (no GUI):
+
+    java -Djava.awt.headless=true -jar winthing-2.0.0.jar
 
 ## Configuration
 
@@ -51,7 +68,7 @@ WinThing loads configuration from multiple sources in this order (highest priori
 
 Example how to pass parameters from command line:
 
-	java -Dbroker="127.0.0.1:1883" -jar winthing-1.2.0.jar
+	java -Dbroker="127.0.0.1:1883" -jar winthing-2.0.0.jar
 
 ### Environment variables
 
@@ -60,7 +77,7 @@ For better security, use environment variables instead of command-line parameter
 	export WINTHING_BROKER="192.168.1.100:8883"
 	export WINTHING_MQTT_PROTOCOL="ssl"
 	export WINTHING_PASSWORD="secret"
-	java -jar winthing-1.5.0.jar
+	java -jar winthing-2.0.0.jar
 
 ### winthing.conf
 
@@ -76,12 +93,36 @@ Example file:
 
 By default WinThing executes any command it receives in the system/commands/run topic. Create this file in the current working directory to whitelist only specific commands. The file contains an unique string identifier (used as payload in the MQTT message, see below) and path to executable.
 
-Example file:
+Example file (Windows):
 
 	notepad = "c:/windows/system32/notepad.exe"
 	adobe = "c:\\program files\\adobe\\reader.exe"
 
-*Note you can use slash* ' / ' *or double backslash* ' \\\\ ' *as path separator.*
+Example file (Linux/macOS):
+
+	editor = "/usr/bin/nano"
+	browser = "/usr/bin/firefox"
+
+*Note: On Windows you can use slash* ' / ' *or double backslash* ' \\\\ ' *as path separator.*
+
+## Cross-Platform Support
+
+WinThing automatically detects the operating system at startup and loads the appropriate platform-specific implementation:
+
+| Feature | Windows | Linux | macOS |
+|---------|---------|-------|-------|
+| Shutdown/Reboot | Win32 API | systemctl | AppleScript |
+| Suspend/Hibernate | Win32 API | systemctl | pmset |
+| Run commands | ShellExecute | /bin/sh | /bin/sh |
+| Open URIs | ShellExecute | xdg-open | open |
+| Close window | Win32 API | xdotool/wmctrl | AppleScript |
+| Display sleep | Win32 API | xset | pmset |
+| Keyboard simulation | SendInput | xdotool | AppleScript |
+| CPU monitoring | JMX | JMX | JMX |
+| Memory monitoring | Win32 API | /proc/meminfo | sysctl/vm_stat |
+| Battery monitoring | Win32 API | /sys/class/power_supply | pmset |
+| Now playing | Window titles | playerctl (MPRIS) | AppleScript |
+| Radeon display | ATI ADL | Not available | Not available |
 
 ## Home Assistant Integration
 
@@ -132,7 +173,7 @@ All entities include proper icons, units, and device classes for seamless integr
 
 ## Security Considerations
 
-WinThing provides remote control capabilities for Windows systems. Follow these security best practices:
+WinThing provides remote control capabilities for your system. Follow these security best practices:
 
 ### Command Execution Protection
 
@@ -165,14 +206,18 @@ WinThing provides remote control capabilities for Windows systems. Follow these 
 ### Defense in Depth
 
 Even with these protections, WinThing grants significant system access. Consider:
-- Running WinThing with a limited user account (not Administrator) when possible
-- Using Windows Firewall to restrict outbound connections
+- Running WinThing with a limited user account when possible
+- Using firewall rules to restrict outbound connections
 - Monitoring MQTT traffic for anomalies
 - Implementing rate limiting on MQTT broker to prevent abuse
 
 ## Logging
 
-You can open application log by clicking on the tray icon. To log into **winthing.log** file in the current working directory run WinThing with the **-debug** parameter.
+You can open application log by clicking on the tray icon (Windows/Linux with GUI). To log into **winthing.log** file in the current working directory run WinThing with the **-debug** parameter.
+
+	java -jar winthing-2.0.0.jar -debug
+
+On Windows:
 
 	winthing.exe -debug
 
@@ -235,14 +280,14 @@ Trigger immediate system hibernate.
 **Payload:** [command:string, arguments:string, workingDirectory:string]
 
 Run a command. Arguments and working directory are optional (empty string and null by default).<br>
-If whitelist is enabled, only the command as unique identifier is required. The identifier is checked against the whitelist file (see **whitelist.ini** above).
+If whitelist is enabled, only the command as unique identifier is required. The identifier is checked against the whitelist file (see **winthing.ini** above).
 
 ---
 
 **Topic:** winthing/system/commands/open<br>
 **Payload:** uri:string
 
-Opens an URI, like a website in a browser or a disk location in a file browser.
+Opens a URI, like a website in a browser or a disk location in a file browser.
 
 #### Media Controls
 
@@ -333,11 +378,16 @@ Battery information. Only published on systems with a battery. `level` is 0-100 
 **Payload:** title:string<br>
 **QoS:** 0
 
-The window title of a detected media player (Spotify, VLC, foobar2000, MusicBee, AIMP, Winamp, iTunes, YouTube in browser, etc.). An empty string is published when nothing is playing. Detection is **read-only** (window title scanning only) and will never cause media to play, pause, or resume, including after waking from hibernation or sleep.
+The currently playing media title. Detection method varies by platform:
+- **Windows**: Window title scanning (Spotify, VLC, foobar2000, MusicBee, AIMP, Winamp, iTunes, YouTube in browser, etc.)
+- **Linux**: MPRIS via playerctl (Spotify, VLC, and any MPRIS-compatible player)
+- **macOS**: AppleScript queries to Spotify and Music.app
+
+An empty string is published when nothing is playing.
 
 ---
 
-#### ATI Radeon display driver
+#### ATI Radeon display driver (Windows only)
 
 **Topic:** winthing/radeon/commands/set_best_resolution<br>
 **Payload:** -
@@ -353,9 +403,11 @@ Sets the screen to the given resolution.
 
 ## Building
 
-Maven is required to build the application. For convenience the Maven build file contains execution to produce a Windows executable.
+Maven is required to build the application.
 
     mvn clean package
+
+On Windows, a `.exe` wrapper is automatically created during the build. On Linux/macOS, only the JAR is produced.
 
 To run static analysis tools, use these commands:
 
@@ -365,7 +417,7 @@ To run static analysis tools, use these commands:
 
 ## License
 
-Copyright 2015-2020 Mikołaj Siedlarek &lt;mikolaj@siedlarek.pl&gt;
+Copyright 2015-2020 Mikolaj Siedlarek &lt;mikolaj@siedlarek.pl&gt;
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this software except in compliance with the License.

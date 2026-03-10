@@ -21,7 +21,7 @@ public class DesktopController extends BaseController {
     }
 
     public void closeActiveWindow(final Message message) {
-        desktopService.getForegroundWindow().ifPresent(desktopService::closeWindow);
+        desktopService.closeActiveWindow();
     }
 
     public void setDisplaySleep(final Message message) {

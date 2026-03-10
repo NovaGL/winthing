@@ -77,7 +77,7 @@ public class HomeAssistantDiscovery {
         logger.info("Publishing Home Assistant discovery for device: {}", deviceName);
 
         // Binary sensors
-        publishBinarySensor("online", "connectivity", "mdi:lan-connect");
+        publishBinarySensor("online", "system/online", "connectivity", "mdi:lan-connect");
 
         // Sensors
         publishSensor("cpu_usage", "system/monitoring/cpu_usage", null, "%",
@@ -224,7 +224,7 @@ public class HomeAssistantDiscovery {
         device.addProperty("identifiers", deviceId);
         device.addProperty("name", deviceName);
         device.addProperty("manufacturer", "WinThing");
-        device.addProperty("model", "Windows MQTT Control");
+        device.addProperty("model", "MQTT Control");
         device.addProperty("sw_version", VERSION);
 
         return device;

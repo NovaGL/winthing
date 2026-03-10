@@ -8,7 +8,7 @@
   <version>1.5.0</version>
 
   <name>WinThing</name>
-  <description>Remotely control Windows through MQTT.</description>
+  <description>Remotely control your computer through MQTT. Supports Windows, Linux, and macOS.</description>
   <url>https://github.com/msiedlarek/winthing</url>
 
   <issueManagement>
@@ -270,38 +270,53 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>com.akathist.maven.plugins.launch4j</groupId>
-        <artifactId>launch4j-maven-plugin</artifactId>
-        <version>2.5.2</version>
-        <executions>
-          <execution>
-            <id>l4j-clui</id>
-            <phase>package</phase>
-            <goals>
-              <goal>launch4j</goal>
-            </goals>
-            <configuration>
-              <headerType>gui</headerType>
-              <jar>${project.build.directory}/${project.artifactId}-${project.version}.jar</jar>
-              <outfile>${project.build.directory}/winthing-${project.version}.exe</outfile>
-              <icon>${project.build.resources[0].directory}/favicon.ico</icon>
-              <downloadUrl>http://java.com/download</downloadUrl>
-              <classPath>
-                <mainClass>com.fatico.winthing.Application</mainClass>
-              </classPath>
-              <jre>
-                <bundledJre64Bit>false</bundledJre64Bit>
-                <bundledJreAsFallback>false</bundledJreAsFallback>
-                <minVersion>${maven.compiler.target}</minVersion>
-                <jdkPreference>preferJdk</jdkPreference>
-                <runtimeBits>64</runtimeBits>
-              </jre>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>windows-exe</id>
+      <activation>
+        <os>
+          <family>windows</family>
+        </os>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>com.akathist.maven.plugins.launch4j</groupId>
+            <artifactId>launch4j-maven-plugin</artifactId>
+            <version>2.5.2</version>
+            <executions>
+              <execution>
+                <id>l4j-clui</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>launch4j</goal>
+                </goals>
+                <configuration>
+                  <headerType>gui</headerType>
+                  <jar>${project.build.directory}/${project.artifactId}-${project.version}.jar</jar>
+                  <outfile>${project.build.directory}/winthing-${project.version}.exe</outfile>
+                  <icon>${project.build.resources[0].directory}/favicon.ico</icon>
+                  <downloadUrl>http://java.com/download</downloadUrl>
+                  <classPath>
+                    <mainClass>com.fatico.winthing.Application</mainClass>
+                  </classPath>
+                  <jre>
+                    <bundledJre64Bit>false</bundledJre64Bit>
+                    <bundledJreAsFallback>false</bundledJreAsFallback>
+                    <minVersion>${maven.compiler.target}</minVersion>
+                    <jdkPreference>preferJdk</jdkPreference>
+                    <runtimeBits>64</runtimeBits>
+                  </jre>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
 </project>

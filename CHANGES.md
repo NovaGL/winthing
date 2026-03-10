@@ -1,5 +1,25 @@
 # Release notes
 
+## 2.0.0
+
+- **Cross-platform support**: WinThing now runs on Linux and macOS in addition to Windows.
+- Added platform detection (`OsDetector`) to automatically select the correct implementation at startup.
+- Extracted platform-independent interfaces for `SystemService`, `DesktopService`, `KeyboardService`, and `MonitoringService`.
+- **Windows**: Existing Win32 JNA-based implementations preserved in `platform.windows` package.
+- **Linux**: New implementations using `systemctl`, `xdotool`, `xset`, `playerctl`, `/proc/meminfo`, and `/sys/class/power_supply`.
+- **macOS**: New implementations using `osascript` (AppleScript), `pmset`, `sysctl`, `vm_stat`, and native Spotify/Music.app integration.
+- Refactored `KeyboardKey` and `MouseButton` enums to remove Windows-specific `WinDef.WORD` dependency.
+- GUI (`WindowGui`) now supports headless mode for servers without a display.
+- `ConsoleLogger` gracefully handles headless environments.
+- Moved Launch4j Windows `.exe` packaging to a Maven profile (only active on Windows).
+- Updated CI workflow to test on Ubuntu, macOS, and Windows.
+- Updated `HomeAssistantDiscovery` device model to be platform-neutral.
+- Updated `SystemCommander` whitelist validation to be cross-platform.
+- Fixed `HomeAssistantDiscovery.publishBinarySensor` call for the "online" sensor.
+- Added `ShellExecutor` utility for running native shell commands on Linux/macOS.
+- Platform-specific Guice modules (`WindowsPlatformModule`, `LinuxPlatformModule`, `MacPlatformModule`) for clean dependency injection.
+- Radeon display driver support remains Windows-only.
+
 ## 1.5.0
 
 - Updated to require OpenJDK 21.
