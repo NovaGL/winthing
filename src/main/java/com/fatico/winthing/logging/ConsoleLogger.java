@@ -49,7 +49,7 @@ public class ConsoleLogger extends ConsoleAppender<ILoggingEvent> {
                 try {
                     Application.getApp().reload();
                 } catch (Exception ex) {
-                    // Ignore GUI errors in headless environments
+                    addError("GUI reload failed", ex);
                 }
                 lastGuiUpdateTime = currentTime;
             }

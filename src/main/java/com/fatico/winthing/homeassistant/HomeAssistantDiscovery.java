@@ -45,8 +45,8 @@ public class HomeAssistantDiscovery {
     public HomeAssistantDiscovery(final Config config, final MessagePublisher publisher) {
         this.publisher = Objects.requireNonNull(publisher);
 
-        this.enabled = config.hasPath(Settings.HOMEASSISTANT_DISCOVERY)
-            ? config.getBoolean(Settings.HOMEASSISTANT_DISCOVERY) : true;
+        this.enabled = !config.hasPath(Settings.HOMEASSISTANT_DISCOVERY)
+            || config.getBoolean(Settings.HOMEASSISTANT_DISCOVERY);
 
         this.discoveryPrefix = config.hasPath(Settings.HOMEASSISTANT_PREFIX)
             ? config.getString(Settings.HOMEASSISTANT_PREFIX) : "homeassistant";
