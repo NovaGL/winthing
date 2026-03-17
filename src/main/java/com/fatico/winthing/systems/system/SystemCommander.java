@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
  */
 public class SystemCommander {
     public static final String ConfigFile = "winthing.ini";
-    private static final boolean REQUIRE_WHITELIST = true;  // Safety default
+    private static final boolean REQUIRE_WHITELIST = false;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private boolean isEnabled = false;

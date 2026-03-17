@@ -91,9 +91,8 @@ public class Engine implements MqttCallback, MessagePublisher {
         this.gson = Objects.requireNonNull(gson);
         this.registry = Objects.requireNonNull(registry);
 
-        // Support SSL/TLS protocol (default to ssl for security)
         String protocol = config.hasPath(Settings.MQTT_PROTOCOL)
-            ? config.getString(Settings.MQTT_PROTOCOL) : "ssl";
+            ? config.getString(Settings.MQTT_PROTOCOL) : "tcp";
         String brokerUrl = config.getString(Settings.BROKER_URL);
         String connectionUrl = protocol + "://" + brokerUrl;
 

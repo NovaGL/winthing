@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
  */
 public class HomeAssistantDiscovery {
 
-    private static final String VERSION = "1.6.0";
+    private static final String VERSION = "2.0.0";
     private static final Logger logger = LoggerFactory.getLogger(HomeAssistantDiscovery.class);
 
     private final boolean enabled;
