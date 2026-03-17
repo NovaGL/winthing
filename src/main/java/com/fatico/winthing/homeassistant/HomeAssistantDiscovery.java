@@ -8,6 +8,7 @@ import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 import com.typesafe.config.Config;
 import java.net.InetAddress;
+import java.util.Locale;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +62,8 @@ public class HomeAssistantDiscovery {
         this.deviceName = config.hasPath(Settings.DEVICE_NAME)
             ? config.getString(Settings.DEVICE_NAME) : defaultName;
 
-        this.deviceId = "winthing_" + deviceName.toLowerCase().replaceAll("[^a-z0-9]", "_");
+        this.deviceId = "winthing_"
+            + deviceName.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "_");
     }
 
     /**
@@ -245,7 +247,7 @@ public class HomeAssistantDiscovery {
 
     private String formatName(String name) {
         return deviceName + " " + name.replace("_", " ")
-            .substring(0, 1).toUpperCase() + name.replace("_", " ").substring(1);
+            .substring(0, 1).toUpperCase(Locale.ROOT) + name.replace("_", " ").substring(1);
     }
 
     private String getHostname() {
