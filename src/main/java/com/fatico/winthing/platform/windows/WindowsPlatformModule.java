@@ -42,7 +42,7 @@ public class WindowsPlatformModule extends AbstractModule {
             java.util.Objects.requireNonNull(
                 com.fatico.winthing.systems.radeon.jna.AtiAdl.INSTANCE);
             install(new com.fatico.winthing.systems.radeon.Module());
-        } catch (Throwable e) {
+        } catch (LinkageError | Exception e) {
             logger.info("AMD Radeon ADL library not available, skipping Radeon support.");
         }
     }
