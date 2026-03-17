@@ -33,7 +33,7 @@ public class WindowsPlatformModule extends AbstractModule {
         // Windows-only: Radeon display driver support (optional - requires AMD GPU + drivers)
         try {
             install(new com.fatico.winthing.systems.radeon.Module());
-        } catch (UnsatisfiedLinkError e) {
+        } catch (UnsatisfiedLinkError | Exception e) {
             logger.info("AMD Radeon ADL library not available, skipping Radeon support.");
         }
     }
