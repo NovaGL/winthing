@@ -7,6 +7,8 @@ import com.fatico.winthing.systems.system.SystemService;
 import com.fatico.winthing.windows.WindowsModule;
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Guice module that binds all Windows-specific service implementations.
@@ -14,6 +16,8 @@ import com.google.inject.Singleton;
  * @since 2.0.0
  */
 public class WindowsPlatformModule extends AbstractModule {
+
+    private static final Logger logger = LoggerFactory.getLogger(WindowsPlatformModule.class);
 
     @Override
     protected void configure() {
@@ -26,7 +30,11 @@ public class WindowsPlatformModule extends AbstractModule {
         bind(KeyboardService.class).to(WindowsKeyboardService.class).in(Singleton.class);
         bind(MonitoringService.class).to(WindowsMonitoringService.class).in(Singleton.class);
 
-        // Windows-only: Radeon display driver support
-        install(new com.fatico.winthing.systems.radeon.Module());
+        // Windows-only: Radeon display driver support (optional - requires AMD GPU + drivers)
+        try {
+            install(new com.fatico.winthing.systems.radeon.Module());
+        } catch (UnsatisfiedLinkError e) {
+            logger.info("AMD Radeon ADL library not available, skipping Radeon support.");
+        }
     }
 }
