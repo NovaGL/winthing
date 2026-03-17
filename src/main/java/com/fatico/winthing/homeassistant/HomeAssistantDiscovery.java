@@ -8,6 +8,7 @@ import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 import com.typesafe.config.Config;
 import java.net.InetAddress;
+import java.util.Locale;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,8 +46,8 @@ public class HomeAssistantDiscovery {
     public HomeAssistantDiscovery(final Config config, final MessagePublisher publisher) {
         this.publisher = Objects.requireNonNull(publisher);
 
-        this.enabled = config.hasPath(Settings.HOMEASSISTANT_DISCOVERY)
-            ? config.getBoolean(Settings.HOMEASSISTANT_DISCOVERY) : true;
+        this.enabled = !config.hasPath(Settings.HOMEASSISTANT_DISCOVERY)
+            || config.getBoolean(Settings.HOMEASSISTANT_DISCOVERY);
 
         this.discoveryPrefix = config.hasPath(Settings.HOMEASSISTANT_PREFIX)
             ? config.getString(Settings.HOMEASSISTANT_PREFIX) : "homeassistant";
@@ -61,7 +62,8 @@ public class HomeAssistantDiscovery {
         this.deviceName = config.hasPath(Settings.DEVICE_NAME)
             ? config.getString(Settings.DEVICE_NAME) : defaultName;
 
-        this.deviceId = "winthing_" + deviceName.toLowerCase().replaceAll("[^a-z0-9]", "_");
+        this.deviceId = "winthing_"
+            + deviceName.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "_");
     }
 
     /**
@@ -115,7 +117,8 @@ public class HomeAssistantDiscovery {
 
     private void publishSensor(String name, String stateTopic, String valueTemplate,
             String unit, String deviceClass, String icon) {
-        String topic = String.format("%s/sensor/%s/%s/config", discoveryPrefix, deviceId, name);
+        final String topic = String.format("%s/sensor/%s/%s/config",
+            discoveryPrefix, deviceId, name);
         String friendlyName = formatName(name);
 
         JsonObject config = new JsonObject();
@@ -148,7 +151,7 @@ public class HomeAssistantDiscovery {
 
     private void publishBinarySensor(String name, String stateTopic, String valueTemplate,
             String deviceClass, String icon) {
-        String topic = String.format("%s/binary_sensor/%s/%s/config",
+        final String topic = String.format("%s/binary_sensor/%s/%s/config",
             discoveryPrefix, deviceId, name);
         String friendlyName = formatName(name);
 
@@ -174,7 +177,8 @@ public class HomeAssistantDiscovery {
 
     private void publishButton(String name, String commandTopic, String deviceClass,
             String icon) {
-        String topic = String.format("%s/button/%s/%s/config", discoveryPrefix, deviceId, name);
+        final String topic = String.format("%s/button/%s/%s/config",
+            discoveryPrefix, deviceId, name);
         String friendlyName = formatName(name);
 
         JsonObject config = new JsonObject();
@@ -197,7 +201,8 @@ public class HomeAssistantDiscovery {
 
     private void publishSwitch(String name, String commandTopic, String deviceClass,
             String icon) {
-        String topic = String.format("%s/switch/%s/%s/config", discoveryPrefix, deviceId, name);
+        final String topic = String.format("%s/switch/%s/%s/config",
+            discoveryPrefix, deviceId, name);
         String friendlyName = formatName(name);
 
         JsonObject config = new JsonObject();
@@ -242,7 +247,7 @@ public class HomeAssistantDiscovery {
 
     private String formatName(String name) {
         return deviceName + " " + name.replace("_", " ")
-            .substring(0, 1).toUpperCase() + name.replace("_", " ").substring(1);
+            .substring(0, 1).toUpperCase(Locale.ROOT) + name.replace("_", " ").substring(1);
     }
 
     private String getHostname() {

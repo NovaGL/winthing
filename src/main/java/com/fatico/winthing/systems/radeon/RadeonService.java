@@ -20,7 +20,6 @@ public class RadeonService {
     private static final int MIN_HEIGHT = 480;
     private static final int MAX_WIDTH = 7680;   // 8K resolution
     private static final int MAX_HEIGHT = 4320;
-    private static final int MAX_REFRESH_RATE = 240;  // Hz
 
     private final AtiAdl atiAdl;
     private final Pointer context;
@@ -99,17 +98,6 @@ public class RadeonService {
         }
     }
 
-    private AtiAdl.ADLMode validateMode(AtiAdl.ADLMode mode) {
-        if (mode.iXRes < MIN_WIDTH || mode.iXRes > MAX_WIDTH
-                || mode.iYRes < MIN_HEIGHT || mode.iYRes > MAX_HEIGHT) {
-            throw new AdlException("Resolution out of bounds", -1);
-        }
-        if (mode.fRefreshRate > MAX_REFRESH_RATE) {
-            throw new AdlException("Refresh rate too high", -1);
-        }
-        return mode;
-    }
-
     private void setMode(final int adapterIndex, final AtiAdl.ADLMode mode) {
         final int result = atiAdl.ADL2_Display_Modes_Set(
             context,
@@ -156,7 +144,7 @@ public class RadeonService {
     private static class MallocCallback extends Memory implements AtiAdl.ADL_MAIN_MALLOC_CALLBACK {
         @Override
         public Pointer invoke(int size) {
-            return new Pointer(Memory.malloc(size));
+            return new Pointer(malloc(size));
         }
     }
 }

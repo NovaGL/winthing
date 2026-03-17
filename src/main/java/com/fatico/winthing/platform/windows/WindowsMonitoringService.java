@@ -11,6 +11,7 @@ import com.sun.jna.platform.win32.WinBase;
 import com.sun.jna.platform.win32.WinDef;
 import com.sun.jna.platform.win32.WinUser;
 import java.lang.management.ManagementFactory;
+import java.util.Locale;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,7 +123,7 @@ public class WindowsMonitoringService implements MonitoringService {
         if (title == null || title.isEmpty()) {
             return false;
         }
-        final String lower = title.toLowerCase();
+        final String lower = title.toLowerCase(Locale.ROOT);
         if (lower.contains("spotify") && title.contains(" - ")
                 && !title.equals("Spotify")
                 && !title.equals("Spotify Premium")

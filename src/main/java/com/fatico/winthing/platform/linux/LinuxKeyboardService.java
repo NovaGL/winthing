@@ -6,6 +6,7 @@ import com.fatico.winthing.windows.input.KeyboardKey;
 import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,12 +108,12 @@ public class LinuxKeyboardService implements KeyboardService {
         // For letter keys (A-Z), xdotool uses lowercase
         String name = key.name();
         if (name.length() == 1 && Character.isLetter(name.charAt(0))) {
-            return name.toLowerCase();
+            return name.toLowerCase(Locale.ROOT);
         }
         // For number keys
         if (name.startsWith("NUM") && name.length() == 4) {
             return name.substring(3);
         }
-        return name.toLowerCase();
+        return name.toLowerCase(Locale.ROOT);
     }
 }

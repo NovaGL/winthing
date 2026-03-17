@@ -6,8 +6,8 @@ import com.fatico.winthing.windows.input.KeyboardKey;
 import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
-import java.util.StringJoiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,7 +128,7 @@ public class MacKeyboardService implements KeyboardService {
             } else {
                 // For letter/number keys, use keystroke
                 String ch = mainKey.name().length() == 1
-                    ? mainKey.name().toLowerCase() : mainKey.name();
+                    ? mainKey.name().toLowerCase(Locale.ROOT) : mainKey.name();
                 script = "tell application \"System Events\" to keystroke \"" + ch + "\"";
             }
 

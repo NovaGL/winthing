@@ -4,11 +4,14 @@ import com.fatico.winthing.platform.ShellExecutor;
 import com.fatico.winthing.systems.monitoring.MonitoringService;
 import com.google.inject.Inject;
 import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Locale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +54,8 @@ public class LinuxMonitoringService implements MonitoringService {
             long availableKb = 0;
             Path meminfo = Paths.get("/proc/meminfo");
             try (BufferedReader reader = new BufferedReader(
-                    new FileReader(meminfo.toFile()))) {
+                    new InputStreamReader(new FileInputStream(meminfo.toFile()),
+                        StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     if (line.startsWith("MemTotal:")) {
@@ -97,9 +101,9 @@ public class LinuxMonitoringService implements MonitoringService {
 
             Path statusFile = batteryPath.resolve("status");
             if (Files.exists(statusFile)) {
-                String status = Files.readString(statusFile).trim();
-                acLine = status.equalsIgnoreCase("Charging")
-                    || status.equalsIgnoreCase("Full") ? 1 : 0;
+                String status = Files.readString(statusFile).trim()
+                    .toUpperCase(Locale.ROOT);
+                acLine = "CHARGING".equals(status) || "FULL".equals(status) ? 1 : 0;
             }
 
             Path capacityFile = batteryPath.resolve("capacity");
@@ -132,7 +136,10 @@ public class LinuxMonitoringService implements MonitoringService {
         }
         try {
             return Files.list(powerSupply)
-                .filter(p -> p.getFileName().toString().startsWith("BAT"))
+                .filter(p -> {
+                    Path name = p.getFileName();
+                    return name != null && name.toString().startsWith("BAT");
+                })
                 .findFirst()
                 .orElse(null);
         } catch (Exception ex) {
@@ -147,8 +154,7 @@ public class LinuxMonitoringService implements MonitoringService {
             String output = ShellExecutor.execute(5,
                 "playerctl", "metadata", "--format",
                 "{{ artist }} - {{ title }}");
-            if (output != null && !output.isEmpty()
-                    && !output.contains("No players found")) {
+            if (!output.isEmpty() && !output.contains("No players found")) {
                 return output;
             }
         } catch (Exception ex) {

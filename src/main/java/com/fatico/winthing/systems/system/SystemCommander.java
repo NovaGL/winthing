@@ -72,7 +72,8 @@ public class SystemCommander {
                     + "\nPlease create " + ConfigFile + " with allowed commands"
                 );
             } else {
-                logger.warn("No whitelist found. Every command is allowed to execute on this device!");
+                logger.warn("No whitelist found."
+                    + " Every command is allowed to execute on this device!");
                 return;
             }
         }

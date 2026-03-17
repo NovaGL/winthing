@@ -184,7 +184,7 @@ public enum KeyboardKey {
     private static final Map<String, KeyboardKey> index = new HashMap<>();
 
     static {
-        for (final KeyboardKey key : KeyboardKey.values()) {
+        for (final KeyboardKey key : values()) {
             index.put(key.name().toLowerCase(), key);
             for (final String alias : key.aliases) {
                 index.put(alias.toLowerCase(), key);
