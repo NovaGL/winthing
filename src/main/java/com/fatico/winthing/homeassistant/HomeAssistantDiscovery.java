@@ -115,7 +115,8 @@ public class HomeAssistantDiscovery {
 
     private void publishSensor(String name, String stateTopic, String valueTemplate,
             String unit, String deviceClass, String icon) {
-        final String topic = String.format("%s/sensor/%s/%s/config", discoveryPrefix, deviceId, name);
+        final String topic = String.format("%s/sensor/%s/%s/config",
+            discoveryPrefix, deviceId, name);
         String friendlyName = formatName(name);
 
         JsonObject config = new JsonObject();
@@ -174,7 +175,8 @@ public class HomeAssistantDiscovery {
 
     private void publishButton(String name, String commandTopic, String deviceClass,
             String icon) {
-        final String topic = String.format("%s/button/%s/%s/config", discoveryPrefix, deviceId, name);
+        final String topic = String.format("%s/button/%s/%s/config",
+            discoveryPrefix, deviceId, name);
         String friendlyName = formatName(name);
 
         JsonObject config = new JsonObject();
@@ -197,7 +199,8 @@ public class HomeAssistantDiscovery {
 
     private void publishSwitch(String name, String commandTopic, String deviceClass,
             String icon) {
-        final String topic = String.format("%s/switch/%s/%s/config", discoveryPrefix, deviceId, name);
+        final String topic = String.format("%s/switch/%s/%s/config",
+            discoveryPrefix, deviceId, name);
         String friendlyName = formatName(name);
 
         JsonObject config = new JsonObject();
