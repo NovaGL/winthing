@@ -37,9 +37,9 @@ public class WindowsPlatformModule extends AbstractModule {
         // If the load succeeds the class is already initialized and Module.configure() reuses
         // the cached static instance safely.
         try {
-            @SuppressWarnings("unused")
-            com.fatico.winthing.systems.radeon.jna.AtiAdl atiAdl =
-                com.fatico.winthing.systems.radeon.jna.AtiAdl.INSTANCE;
+            // Access INSTANCE to force class initialization; throws if AMD library absent.
+            // Objects.requireNonNull prevents a dead-store warning while keeping the check.
+            java.util.Objects.requireNonNull(com.fatico.winthing.systems.radeon.jna.AtiAdl.INSTANCE);
             install(new com.fatico.winthing.systems.radeon.Module());
         } catch (Throwable e) {
             logger.info("AMD Radeon ADL library not available, skipping Radeon support.");
