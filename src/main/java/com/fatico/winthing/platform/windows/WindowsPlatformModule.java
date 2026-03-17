@@ -31,9 +31,17 @@ public class WindowsPlatformModule extends AbstractModule {
         bind(MonitoringService.class).to(WindowsMonitoringService.class).in(Singleton.class);
 
         // Windows-only: Radeon display driver support (optional - requires AMD GPU + drivers)
+        // Force AtiAdl class initialization here (before install) so that any native load
+        // failure - which Java wraps in ExceptionInInitializerError, an Error not caught by
+        // "Exception" - is caught by our Throwable handler instead of leaking into Guice.
+        // If the load succeeds the class is already initialized and Module.configure() reuses
+        // the cached static instance safely.
         try {
+            @SuppressWarnings("unused")
+            com.fatico.winthing.systems.radeon.jna.AtiAdl atiAdl =
+                com.fatico.winthing.systems.radeon.jna.AtiAdl.INSTANCE;
             install(new com.fatico.winthing.systems.radeon.Module());
-        } catch (UnsatisfiedLinkError | Exception e) {
+        } catch (Throwable e) {
             logger.info("AMD Radeon ADL library not available, skipping Radeon support.");
         }
     }
