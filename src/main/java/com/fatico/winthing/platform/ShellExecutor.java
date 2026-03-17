@@ -35,7 +35,7 @@ public final class ShellExecutor {
     public static String execute(int timeoutSeconds, String... command) {
         try {
             ProcessBuilder pb = new ProcessBuilder(command);
-            pb.redirectErrorStream(false);
+            pb.redirectErrorStream(true); // merge stderr into stdout so failures are visible
             Process process = pb.start();
 
             StringBuilder output = new StringBuilder();
@@ -54,6 +54,12 @@ public final class ShellExecutor {
             if (!finished) {
                 process.destroyForcibly();
                 throw new SystemException("Command timed out: " + String.join(" ", command));
+            }
+
+            int exitCode = process.exitValue();
+            if (exitCode != 0) {
+                LOGGER.debug("Command exited with code {}: {} — {}",
+                    exitCode, String.join(" ", command), output.toString().trim());
             }
 
             return output.toString().trim();

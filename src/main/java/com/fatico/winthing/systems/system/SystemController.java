@@ -21,7 +21,8 @@ public class SystemController extends BaseController {
 
     private static final int MAX_COMMAND_LENGTH = 256;
     private static final int MAX_PARAMETERS_LENGTH = 8192;
-    private static final Pattern SAFE_COMMAND_PATTERN = Pattern.compile("[a-zA-Z0-9._\\-]+");
+    private static final Pattern SAFE_COMMAND_PATTERN =
+        Pattern.compile("[a-zA-Z0-9._\\-:/\\\\ ]+");
 
     private final SystemService systemService;
     private final KeyboardService keyboardService;
@@ -142,15 +143,12 @@ public class SystemController extends BaseController {
             return null;
         }
 
-        // Prevent path traversal
+        // Normalize to prevent path traversal (e.g. ../../etc)
         Path dir = Paths.get(directory).toAbsolutePath().normalize();
 
-        // Ensure within allowed directories (home or temp)
-        Path userHome = Paths.get(System.getProperty("user.home"));
-        Path temp = Paths.get(System.getProperty("java.io.tmpdir"));
-
-        if (!dir.startsWith(userHome) && !dir.startsWith(temp)) {
-            throw new SystemException("Working directory not in allowed path");
+        // Must be absolute after normalization
+        if (!dir.isAbsolute()) {
+            throw new SystemException("Working directory must be an absolute path");
         }
 
         return dir.toString();

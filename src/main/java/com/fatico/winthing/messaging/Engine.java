@@ -133,11 +133,14 @@ public class Engine implements MqttCallback, MessagePublisher {
     public void run() {
         runningLock.lock();
         try {
+            long backoffSeconds = reconnectInterval.getSeconds();
+            final long maxBackoffSeconds = 60;
             while (true) {
                 boolean connected = false;
                 try {
                     connect();
                     connected = true;
+                    backoffSeconds = reconnectInterval.getSeconds(); // reset on success
                 } catch (final MqttException exception) {
                     logger.error("Could not connect: {}", exception.getMessage());
                 }
@@ -152,16 +155,15 @@ public class Engine implements MqttCallback, MessagePublisher {
                         }
                         return;
                     }
+                    backoffSeconds = reconnectInterval.getSeconds(); // reset after clean disconnect
                 }
-                logger.info(
-                    "Trying to reconnect in {} seconds...",
-                    reconnectInterval.getSeconds()
-                );
+                logger.info("Trying to reconnect in {} seconds...", backoffSeconds);
                 try {
-                    Thread.sleep(reconnectInterval.toMillis());
+                    Thread.sleep(backoffSeconds * 1000L);
                 } catch (final InterruptedException exception) {
                     return;
                 }
+                backoffSeconds = Math.min(backoffSeconds * 2, maxBackoffSeconds);
             }
         } finally {
             runningLock.unlock();
@@ -229,7 +231,7 @@ public class Engine implements MqttCallback, MessagePublisher {
             client.publish(
                 topicPrefix + message.getTopic(),
                 mqttMessage
-            );
+            ).waitForCompletion();
         } catch (final MqttException exception) {
             logger.error("Error while publishing message.", exception);
         }

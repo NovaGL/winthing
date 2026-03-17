@@ -159,6 +159,8 @@ public class HomeAssistantDiscovery {
         config.addProperty("name", friendlyName);
         config.addProperty("unique_id", deviceId + "_" + name);
         config.addProperty("state_topic", topicPrefix + stateTopic);
+        config.addProperty("payload_on", "true");
+        config.addProperty("payload_off", "false");
 
         if (valueTemplate != null) {
             config.addProperty("value_template", "{{ value_json" + valueTemplate + " }}");

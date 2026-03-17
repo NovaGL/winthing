@@ -59,7 +59,7 @@ public class MonitoringController extends BaseController {
             thread.setDaemon(true);
             return thread;
         });
-        scheduler.scheduleAtFixedRate(
+        scheduler.scheduleWithFixedDelay(
             this::publishMonitoringData,
             0,
             intervalSeconds,
